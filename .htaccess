@@ -1,0 +1,22 @@
+RewriteEngine on
+
+RewriteCond %{HTTPS} !=on [NC]
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
+RewriteRule index.html$ ?ctrl=home [L]
+RewriteRule home.html$ ?ctrl=home [L]
+RewriteRule review.html$ ?ctrl=review [L]
+RewriteRule review-detail.html$ ?ctrl=review-detail [L,QSA]
+RewriteRule check.html$ ?ctrl=check [L,QSA]
+
+
+RewriteRule profile.html$ ?ctrl=profile [L]
+RewriteRule history.html$ ?ctrl=history [L]
+RewriteRule slide.html$ ?ctrl=slide [L,QSA]
+RewriteRule nhaphang.html$ ?ctrl=nhaphang [L]
+RewriteRule add-credit.html$ ?ctrl=add-credit [L]
+RewriteRule login.html$ ?ctrl=login [L]
+RewriteRule logout.html$ ?ctrl=logout [L]
+RewriteRule register.html$ ?ctrl=register [L]
+RewriteRule forgot.html$ ?ctrl=forgot [L]
+RewriteRule 404.html$ ?ctrl=404 [L]

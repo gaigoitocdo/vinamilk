@@ -1,0 +1,675 @@
+body {
+   max-width: 500px; /* Giới hạn chiều rộng trang giống điện thoại */ /* Giới hạn chiều rộng trang giống điện thoại */ 
+  margin: 0 auto; /* Căn giữa */
+  width: 100%;
+    border: 2px solid #ffccd5;
+}
+.refresh-btn img {
+  background: #fff;
+  width: 24px;
+  height: 24px;
+}
+.refused-amount {
+  margin: 8px 0 4px;
+  color: #d9534f;        /* màu đỏ nhạt */
+  font-size: 14px;
+}
+/* ----------------------------
+   Noti Card
+----------------------------- */
+.noti-card {
+  padding: 10px;
+  margin: 5px;
+  background: #000;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px var(--card-shadow);
+  color: var(--text-color);
+  font-size: 14px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.noti-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px var(--card-hover-shadow);
+}
+
+.noti-card h5 {
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #ff0000;
+}
+
+.noti-card .content {
+  font-size: 0.9rem;
+  color: #fff;
+  margin-bottom: 0.5rem;
+}
+
+.noti-card .time {
+  text-align: right;
+  font-size: 0.8rem;
+  color: #999;
+}
+
+/* ----------------------------
+   CSKH Card
+----------------------------- */
+.cskh {
+  display: flex;
+  flex-direction: column;
+  height: 180px;
+  padding: 15px;
+  margin: 20px 15px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #ffe6f1, #fff);
+  color: #222;
+  border: 2px solid #ffccd5;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  font-size: 14px;
+  font-weight: 600;
+  transition: box-shadow 0.3s ease;
+  justify-content: space-between;
+}
+
+.cskh:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.cskh .top,
+.cskh .bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cskh .top {
+  height: 80px;
+}
+
+.cskh .bottom {
+     margin-right: 15px;
+      width: 100%;
+  height: 40px;
+  border-radius: 8px;
+
+}
+
+/* ----------------------------
+   Editable Text
+----------------------------- */
+#text-editable[contenteditable="true"]:focus {
+  outline: none;
+  border: 1px inset var(--primary-color);
+  width: 200px;
+}
+
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+ background: linear-gradient(45deg, #d79ef9, #c178f8, #b06af5, #8f5af4);
+  color: var(--text-color);
+  line-height: 1.6;
+  padding: 1rem;
+}
+
+/* ----------------------------
+   Header & Background Slideshow
+----------------------------- */
+.header {
+  position: relative;
+  height: 245px;
+  overflow: hidden;
+  line-height: 50px;
+  z-index: 1;
+  padding-bottom: 50px;
+  color: #fff;
+  border: 2px solid var(--secondary-color);
+  border-radius: var(--border-radius);
+
+}
+
+/* Nền tĩnh phía sau slideshow */
+.header .bg-static {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  /* Thay URL này bằng ảnh nền tĩnh bạn mong muốn */
+  background: url('https://i.ibb.co/tTTK3zvw/photo-2025-03-31-18-18-51.jpg') no-repeat center center;
+  background-size: cover;
+  z-index: -4;
+}
+
+
+/* Slideshow container */
+.header .bg-slideshow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -3;
+   opacity: 0.8;
+}
+
+.header .bg-slideshow .slide {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: 0;
+  animation: slideShow 30s infinite;
+  
+  /* Làm viền ảnh mờ mượt hơn */
+  -webkit-mask-image: radial-gradient(circle, rgba(0,0,0,1) 50%, rgba(0,0,0,0) 100%);
+  mask-image: radial-gradient(circle, rgba(0,0,0,1) 50%, rgba(0,0,0,0) 100%);
+  
+  /* Tạo hiệu ứng ánh sáng xung quanh ảnh */
+  box-shadow: 0px 0px 50px rgba(255, 255, 255, 0.3);
+}
+
+
+/* Slide 1 (ảnh gốc) */
+.header .bg-slideshow .slide:nth-child(1) {
+  background-image: url('https://i.ibb.co/tTgF7w6v/merged-with-silver-border.jpg');
+  animation-delay: 0s;
+}
+
+/* Slide 2 (ảnh gốc) */
+.header .bg-slideshow .slide:nth-child(2) {
+  background-image: url('https://i.ibb.co/p6zCSjDY/photo-2025-03-31-00-55-19.jpg');
+  animation-delay: 5s;
+}
+
+/* Slide 3 (ảnh gốc) */
+.header .bg-slideshow .slide:nth-child(3) {
+  background-image: url('https://i.ibb.co/67nNQGQK/photo-2025-03-28-18-29-14.jpg');
+  animation-delay: 10s;
+}
+
+/* Slide 4 (ảnh gốc) */
+.header .bg-slideshow .slide:nth-child(4) {
+  background-image: url('https://i.ibb.co/4nhRzr0Q/photo-2025-04-02-05-00-03.jpg');
+  animation-delay: 15s;
+}
+
+/* Slide 5 (ảnh gốc) */
+.header .bg-slideshow .slide:nth-child(5) {
+  background-image: url('https://i.ibb.co/bjV7b932/photo-2025-04-02-04-59-58.jpg');
+  animation-delay: 20s;
+}
+
+
+
+
+@keyframes slideShow {
+  0%   { opacity: 0; transform: scale(1.02); }
+  20%  { opacity: 1; transform: scale(1); }
+  80%  { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.02); }
+}
+
+
+
+/* ----------------------------
+   Header – User Wrapper & QR Code
+----------------------------- */
+.header .user-wrapper {
+  position: absolute;
+  bottom: 5px; /* Thấp hơn */
+  left: 10px;
+  display: flex;
+  align-items: center;
+    margin-bottom: 8px;
+}
+
+.user-wrapper .user_img {
+      margin-bottom: 8px;
+  width: 70px;
+  height: 70px;
+  overflow: hidden;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  
+}
+
+.user-wrapper .user_img img {
+      margin-bottom: 8px;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.header .user-wrapper .login-content {
+  flex: 1;
+  margin: 0 0 -10px 15px;
+  display: flex;
+  align-items: center;
+}
+
+.user-wrapper .login-content .login-btn {
+  font-size: 20px;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: #ffffff; /* Chữ màu trắng */
+  
+  /* Viền xung quanh chữ */
+  text-shadow: -1px -1px 2px #000, 1px 1px 2px #000, 
+               -1px 1px 2px #000, 1px -1px 2px #000;
+}
+.user-button {
+  text-shadow:
+    0 1px 0 #000,
+    0 2px 0 #000,
+    0 3px 0 #000,
+    0 4px 0 var(--green),
+    0 5px 0 var(--green),
+    0 6px 2px rgba(0,0,0,0.6),
+    0 8px 4px rgba(0,0,0,0.4);
+}
+
+.login-content .login-label {
+  font-size: 16px;
+  font-weight: bold;
+  margin-left: 6px;
+  letter-spacing: 0.5px;
+  color: #ffeb00;
+  
+  /* Viền chữ màu đen */
+  text-shadow: -1px -1px 2px #000, 1px 1px 2px #000, 
+               -1px 1px 2px #000, 1px -1px 2px #000;
+}
+
+
+/* QR Code */
+.qr-code-container {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  width: 40px;
+  height: 40px;
+  background: #fff;
+  border: 2px solid var(--secondary-color);
+  border-radius: 8px;
+  overflow: hidden;
+  z-index: 1000;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.qr-code-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.line {
+  width: 2px;
+  height: 30px;
+  border-radius: 10px;
+  background-color: #6f42c1;
+}
+
+/* ---------- Finance Section ---------- */
+.finance {
+    padding-top: 10px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 10px 8px;
+  margin: -15px 10px -11px;
+  height: 75px;
+background: linear-gradient(259deg, #ffffff, #ffffff);
+  border-radius: 5px;
+
+  z-index: 10;
+}
+
+.finance-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 18px;
+  font-weight: 700;
+    text-shadow: -1px -1px 2px #ffffff, 1px 1px 2px #ffffff, -1px 1px 2px #000, 1px -1px 2px #ffffff;
+  color: #198754;
+  cursor: pointer;
+}
+
+.finance-item img {
+  width: 31px;
+  height: 31px;
+  margin-bottom: 4px;
+}
+
+/* ---------- Wallet Section ---------- */
+.wallet {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0 15px;
+    margin: 15px 10px -11px;
+    background: linear-gradient(199deg, #ffffff, #ffffff);
+    border-radius: 5px;
+    text-shadow: -1px -1px 2px #ffffff, 1px 1px 2px #ffffff, -1px 1px 2px #000, 1px -1px 2px #ffffff;
+   color: #dc3545;
+    font-weight: 600;
+}
+
+.wallet .part-1 {
+  gap: 10px;  
+  height: 50px;
+  display: flex;
+  align-items: center;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+  border-bottom: 2px solid #f1aeb5;
+}
+
+.wallet .part-1 p {
+  /* Sử dụng margin hợp lý (vd: margin: 10px 0;) */
+  margin: 10px 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+}
+
+.wallet .part-2 {
+  height: 40px;
+  display: flex;
+  align-items: center;
+}
+
+.wallet .part-2 .balance {
+  flex: 1;
+  font-size: 28px;                /* Tăng kích thước chữ */
+  font-weight: 700;               /* Chữ đậm hơn */
+     color: var(--red);
+  letter-spacing: 1px;            /* Giãn chữ một chút cho dễ nhìn */
+
+  transition: transform 0.3s ease;    /* Thêm transition nếu muốn hiệu ứng hover */
+}
+
+/* Nếu muốn khi hover vào .balance có hiệu ứng phóng to */
+.wallet .part-2 .balance:hover {
+  transform: scale(1.05);
+}
+
+
+.wallet .part-2 .refresh-btn {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  /* Sử dụng màu chữ đồng bộ */
+  color: #dc3545;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  cursor: pointer;
+  margin-left: 8px;
+  transition: transform 0.3s, box-shadow 0.3s;
+
+}
+
+/* ---------- Menu Section ---------- */
+.content .menu {
+    
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-gap: 10px;
+  margin: 10px 10px 15px;
+background: linear-gradient(157deg, #ffffff, #ffffff);
+  border-radius: 5px;
+    box-shadow: 0 4px 6px rgb(0 0 0 / 66%);
+}
+
+.menu-item {
+  height: 61px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+  color: #6f42c1;
+}
+
+.menu .menu-item:hover {
+    background: #ff9a9e;
+  color: #ffffff;
+  border-radius: 6px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.menu .menu-item img {
+  width: 30px;
+  height: 30px;
+  margin-right: 10px;
+}
+
+.menu .menu-item span {
+  font-size: 15px;
+  font-weight: 600;
+    text-shadow: -1px -1px 2px #ffffff, 1px 1px 2px #ffffff, -1px 1px 2px #000, 1px -1px 2px #ffffff;
+  color: #6f42c1;
+  transition: color 0.2s;
+}
+
+.menu .menu-item:hover span {
+  color: #000000;
+  
+}
+
+
+.modal .table {
+    
+  width: 100%;
+  margin-bottom: 1rem;
+  border-collapse: collapse;
+  background: #f8f8f8;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.modal .table thead {
+    
+ background: linear-gradient(90deg, #ffffff, #ffffff);
+  color: #fff;
+  text-transform: uppercase;
+}
+
+.modal .table thead th {
+  font-size: 0.85rem;
+  font-weight: 700;
+  border-bottom: 1px solid #dcdcdc;
+  padding: 10px;
+}
+
+.modal .table tbody tr {
+  border-bottom: 1px solid #eee;
+}
+
+.modal .table tbody td {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #000;
+}
+
+.modal .table tbody tr:hover {
+  background: rgba(190,150,240,0.05);
+}
+
+/* ----------------------------
+   Buttons & Misc
+----------------------------- */
+.btn.btn-primary.w-100,
+#btn-withdraw-submit.btn.btn-danger.w-100,
+.modal#userDetailModal .modal-body .btn.btn-primary.w-100 {
+  background: #f1aeb5;
+  color: #000000;
+  border: none;
+  padding: 0.8rem;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s;
+  width: 100%;
+  text-align: center;
+}
+
+.btn.btn-primary.w-100:hover,
+#btn-withdraw-submit.btn.btn-danger.w-100:hover {
+  background: #8f66ff;
+}
+
+.linear-gradient-line {
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, #c281fe, #8f66ff);
+  margin: 1rem 0;
+}
+
+.bank-info-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+----------------------
+   Tips
+----------------------------- */
+.tips {
+  font-size: 0.9rem;
+  color: #4d00ff;
+  background: rgba(220,220,255,0.4);
+  padding: 0.8rem 1rem;
+  border-radius: 6px;
+  margin-top: 1rem;
+  line-height: 1.4;
+  border: 1px solid rgba(180,150,255,0.2);
+}
+
+/* ----------------------------
+   Modal Confirm
+----------------------------- */
+.modal.fade .modal-dialog {
+  max-width: 400px;
+  margin: auto;
+}
+
+.modal-content {
+  background: #fff;
+  border-radius: 8px;
+  border: none;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+}
+
+.modal-header.modal-header-colorful {
+    background: linear-gradient(135deg, #ffc0cb, #ffb6c1);
+
+  color: #000000;
+  padding: 1rem;
+  border-bottom: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header.modal-header-colorful .modal-title {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.modal-header .close {
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.modal-header .close:hover {
+  transform: scale(1.1);
+}
+
+.modal-body {
+    font-weight: bold;
+  padding: 1rem 1.5rem;
+  color: #002147;
+}
+
+.modal-body h3.animated-text {
+  font-size: 1.4rem;
+  margin-bottom: 1rem;
+  font-weight: bold;
+  color: #002147;
+}
+
+.center {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.form-group-dark {
+  margin-bottom: 1rem;
+  text-align: left;
+}
+
+.form-group-dark label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #002147;
+}
+
+.form-group-dark input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+  color: #333;
+  background: #f9f9f9;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.form-group-dark input:focus {
+  border-color: #8f66ff;
+  box-shadow: 0 0 0 3px rgba(150,100,255,0.2);
+  outline: none;
+}
+
+/* ----------------------------
+   Form Liên Kết Ngân Hàng
+----------------------------- */
+#form-bind-card {
+  margin-top: 1rem;
+}
+
+#form-bind-card .form-group {
+  margin-bottom: 1rem;
+}
+
+#form-bind-card .form-group label {
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+  display: block;
+  color: #333;
+}

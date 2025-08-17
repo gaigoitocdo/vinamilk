@@ -1,0 +1,2 @@
+RewriteEngine ON
+RewriteRule ^(.*).html$ index.php?controller=$1 [QSA,L]

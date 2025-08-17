@@ -1,0 +1,607 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box
+}
+
+.home-container {
+    padding: 0;
+    margin: 0;
+    max-width: 100%
+}
+
+.banner-container {
+    overflow: hidden;
+    padding: 0
+}
+
+.banner {
+    gap: 5px;
+    display: flex;
+    transition: transform.5s ease-in-out
+}
+
+.banner-image {
+    width: 33, 3%;
+    height: 250px;
+    object-fit: cover;
+    border: 3px solid;
+    border-image: linear-gradient(45deg, #f00, #0f0, #00f, #f0f)1;
+    box-sizing: border-box;
+    margin: 0
+}
+
+   @keyframes fall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+
+.heart,
+.flower {
+  position: fixed;
+  top: -30px;
+  pointer-events: none;
+  z-index: 10;
+}
+.heart {
+  font-size: 24px;
+  opacity: 0.8;
+  animation: fall 6s linear infinite;
+}
+/* Nút bấm với hiệu ứng pulse & tim trên nút */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(236, 72, 153, 0.6);
+  }
+  70% {
+    box-shadow: 0 0 0 15px rgba(236, 72, 153, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(236, 72, 153, 0);
+  }
+}
+.pulse {
+  animation: pulse 2s infinite;
+}
+#characterList {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    padding: 10px 0;
+    justify-items: center;
+    align-items: center;
+    justify-content: center;
+    align-content: center;
+    margin-bottom: 100px;
+}
+
+@media (min-width: 640px) {
+    #characterList {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (min-width: 768px) {
+    #characterList {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+@media (min-width: 1024px) {
+    #characterList {
+        grid-template-columns: repeat(5, 1fr);
+    }
+}
+
+@media (min-width: 1600px) {
+    #characterList {
+        grid-template-columns: repeat(6, 1fr);
+    }
+}
+
+@media (min-width: 1900px) {
+    #characterList {
+        grid-template-columns: repeat(7, 1fr);
+    }
+}
+
+.character-card {
+    position: relative;
+    width: 100%;
+    max-width: 220px;
+    background: linear-gradient(135deg, #000000, #000000);
+    border-radius: 12px;
+    overflow: hidden;
+    transform-style: preserve-3d;
+    transition: transform 0.3s ease, box-shadow 0.3s ease,
+        border-color 0.5s ease;
+    cursor: pointer;
+}
+
+.character-card:hover {
+    transform: rotateY(15deg) translateZ(30px) scale(1.05);
+    box-shadow: 0 25px 50px rgba(83, 83, 83, 0.6);
+    border-radius: 12px;
+    background: linear-gradient(135deg, #3b82f6, #222324, #000000);
+    border-image: linear-gradient(45deg, #3b82f6, #2c2c2c, #2c2c2c) 1;
+}
+
+.character-card img {
+    width: 100%;
+    height: 16rem;
+    object-fit: cover;
+    border-radius: 0.5rem;
+    margin-bottom: 0.75rem;
+    transition: opacity 0.5s ease-in-out;
+}
+
+.character-badge {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: linear-gradient(135deg, #06b6d4, #3b82f6);
+    font-size: 10px;
+    font-weight: bold;
+    padding: 4px 7px;
+    border-radius: 5px;
+    text-transform: uppercase;
+    z-index: 2;
+    color: #fff;
+    max-width: 40%;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.character-status {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    background: rgba(0, 0, 0, 0.7);
+    color: #ffffff;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.character-joined-date {
+    font-size: 12px;
+    font-weight: bold;
+    color: #ffffff;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+/* 🔹 Đảm bảo chữ chạy ngay khi trang load */
+.character-name {
+    overflow: hidden;
+    white-space: nowrap;
+    position: relative;
+    width: 100%;
+    display: block;
+    background: rgba(0, 0, 0, 0.6);
+    /* Làm nổi bật chữ hơn */
+    padding: 5px;
+    border-radius: 5px;
+}
+
+/* 🔹 Animation chạy ngay khi trang load */
+.character-name span {
+    display: inline-block;
+    animation: marquee 30s linear infinite;
+    /* Chạy ngay khi trang load */
+    white-space: nowrap;
+    font-size: 15px;
+    color: #fff;
+}
+
+/* 🔹 Keyframes chạy ngay lập tức */
+@keyframes marquee {
+    0% {
+        transform: translateX(100%);
+    }
+
+    100% {
+        transform: translateX(-100%);
+    }
+}
+
+
+
+.statistics-widget {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    border-radius: 12px;
+    max-width: 100%;
+    margin: 0px auto;
+    font-family: "Poppins", sans-serif;
+    padding: 15px;
+}
+
+.stat-item {
+    padding: 5px 9px;
+    border-radius: 12px;
+    display: flex;
+    gap: 12px;
+
+    align-items: center;
+    color: #000000;
+    background-size: 400% 400%;
+    animation: gradientMove 5s ease infinite;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease,
+        background 0.3s ease;
+}
+
+.stat-item i {
+    font-size: 18px;
+    color: #ff00f5;
+}
+
+.stat-item strong {
+    font-weight: 550;
+   background: linear-gradient(90deg, #000000, #000000, #000000);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    font-size: 16px;
+    color: #ff5e00;
+}
+
+.stat-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(74, 105, 189, 0.6);
+}
+
+@media (max-width: 480px) {
+    .statistics-widget {
+        padding: 8px;
+    }
+
+    .stat-item {
+        flex: 1 1 calc(50% - 5px);
+        font-size: 13px;
+        padding: 4px 6px;
+    }
+
+    .stat-item i {
+        font-size: 14px;
+    }
+
+    .stat-item strong {
+        font-size: 12px;
+    }
+}
+
+.marquee-text {
+    display: inline-block;
+    padding-left: 100%;
+    /* Bắt đầu ngoài khung */
+    animation: marquee 5s linear infinite;
+}
+
+@keyframes marquee {
+    from {
+        transform: translateX(0);
+    }
+
+    to {
+        transform: translateX(-100%);
+    }
+}
+
+.loading-screen {
+    background: linear-gradient(145deg, #000, #1a1a1a);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.loading {
+    z-index: 2000;
+    border: 10px solid #f3f3f3;
+    /* Light grey */
+    border-top: 10px solid #3498db;
+    /* Blue */
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.offcanvas {
+    position: fixed;
+    top: 0;
+    right: -400px;
+    /* Ẩn ra ngoài màn hình */
+    width: 360px;
+    height: 100vh;
+    background: linear-gradient(145deg, #000, #1a1a1a);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.6);
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border 0.3s ease;
+    color: #fff;
+    padding: 20px;
+    padding-bottom: 50px;
+    overflow: auto;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    z-index: 1200;
+    border: 1px solid #ffffff;
+    border-top-left-radius: 1rem;
+    border-bottom-left-radius: 1rem;
+}
+
+.offcanvas.active {
+    right: 0;
+}
+
+.offcanvas::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    /* top: 0, left: 0, right: 0, bottom: 0 */
+    background: radial-gradient(circle at top left,
+            rgba(255, 255, 255, 0.05),
+            transparent 70%);
+    opacity: 0;
+    pointer-events: none;
+    /* Không chặn thao tác người dùng */
+    transition: opacity 0.6s ease;
+}
+
+.offcanvas button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 30px;
+    height: 30px;
+    z-index: 222;
+    border: none;
+    border-radius: 50%;
+    background: #ffffff;
+    color: #000000;
+    font-weight: 900;
+    cursor: pointer;
+    outline: none;
+}
+
+#offCanvasImage {
+    width: 100%;
+    height: 420px;
+    object-fit: cover;
+    border-radius: 10px;
+    box-shadow: 0px 6px 12px rgba(255, 255, 255, 0.15);
+}
+
+#offCanvasExtra {
+    margin-bottom: 10px;
+    font-size: 14px;
+    color: #ccc;
+}
+
+#galleryGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
+    margin-top: 10px;
+}
+
+.list-pictures {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.list-pictures>li {
+    border: 1px solid transparent;
+    float: left;
+    margin: 0 -1px -1px 0;
+    overflow: hidden;
+}
+
+#galleryGrid img {
+    width: 100%;
+    height: 170px;
+    object-fit: cover;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: transform 0.3s ease-in-out;
+}
+
+#galleryGrid img:hover {
+    transform: scale(1.1);
+    box-shadow: 0px 4px 10px rgba(255, 255, 255, 0.2);
+}
+
+.lock-overlay {
+    background: linear-gradient(135deg, rgb(139 139 139 / 85%), rgb(53 46 46 / 80%));
+    /* Tắt hoặc giảm bớt hiệu ứng mờ nền */
+    backdrop-filter: none;
+    /* hoặc blur(2px) nếu muốn mờ nhẹ */
+
+    /* Xoá hoặc comment gradient nếu có */
+    /* background: linear-gradient(135deg, rgba(55, 10, 47, 0.85), rgba(0, 0, 0, 0.8)); */
+
+    /* Đường viền + bo tròn (tuỳ chọn) */
+    border: 2px solid rgb(170, 63, 63);
+    border-radius: 8px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #fc5c7d;
+    color: #ffffff;
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+    z-index: 102;
+    pointer-events: auto;
+    /* Cho phép click overlay */
+}
+
+.lock-overlay i {
+    font-size: 36px;
+    margin-bottom: 5px;
+    color: #fff;
+    animation: keySwing 1.5s infinite ease-in-out;
+}
+
+@keyframes keySwing {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    25% {
+        transform: rotate(-10deg);
+    }
+
+    50% {
+        transform: rotate(10deg);
+    }
+
+    75% {
+        transform: rotate(-5deg);
+    }
+
+    100% {
+        transform: rotate(0deg);
+    }
+}
+
+.character-info-box {
+    /* Sử dụng cùng gradient tối như OffCanvas */
+    background: linear-gradient(145deg, #000, #1a1a1a);
+
+    /* Đường viền nhẹ tông tối */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+
+    /* Đổ bóng nhẹ */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.6);
+
+    /* Khoảng cách & bố cục */
+    margin-bottom: 16px;
+    padding: 16px;
+    /* position: relative; */
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Nếu muốn có chút hiệu ứng “highlight” ở nền khi hover: */
+.character-info-box::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at top left,
+            rgba(255, 255, 255, 0.05),
+            transparent 70%);
+    opacity: 0;
+    transition: opacity 0.6s ease;
+    pointer-events: none;
+}
+
+.character-info-box:hover {
+    transform: scale(1.01);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
+}
+
+.character-info-box:hover::before {
+    opacity: 0.1;
+}
+
+/* Kiểu chữ */
+.character-info-box h2 {
+    font-size: 1.25rem;
+    /* Tailwind: text-xl */
+    text-align: center;
+    background: linear-gradient(90deg, #ff8c00, #ff2e63, #3a86ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
+    text-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+}
+
+.character-info-box p {
+    font-size: 0.875rem;
+    /* Tailwind: text-sm */
+    line-height: 1.4;
+    color: #fff;
+    margin-bottom: 6px;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+/* Social Icons */
+.social-icons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+    justify-content: center;
+}
+
+.social-icon {
+    font-size: 2rem;
+    text-decoration: none;
+}
+
+.facebook-icon i {
+    color: #1877f2;
+}
+
+.telegram-icon i {
+    color: #0088cc;
+}
+
+.instagram-icon i {
+    color: #e1306c;
+}
+
+.tiktok-icon i {
+    color: #ff0050;
+}
+
+.social-icon:hover i {
+    transform: scale(1.2);
+    transition: 0.3s;
+}
+
+.lock-overlay {
+    width: 100%;
+    height: 170px;
+    color: rgb(255, 255, 255);
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}

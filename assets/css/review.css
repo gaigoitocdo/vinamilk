@@ -1,0 +1,333 @@
+/* Khai báo biến (CSS Variables) cho bảng màu hài hòa */
+:root {
+ --primary-color: linear-gradient(135deg, #2d94ec, #6ed1f6);   /* Xanh dương nhẹ */
+  --secondary-color: #50e3c2;     /* Màu xanh lam – ngọc bích */
+  --card-bg: #ffffff;             /* Nền trắng cho thẻ */
+  --border-color: #ddd;           /* Màu viền nhạt */
+  --text-color: #ff5d80;             /* Màu chữ chính */
+  --transition-speed: 0.3s;
+  --accent-glow: rgba(74, 144, 226, 0.6);
+
+}
+body {
+  max-width: 100% !important;
+font-weight: bold;
+  color: #000000; /* Màu chữ mặc định */
+  position: relative;
+ 
+  margin: 0 auto; /* Căn giữa */
+}
+
+
+.page-container {
+  border: 1px solid #ccc;
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 16px;
+
+}
+
+     @keyframes fall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+
+.heart,
+.flower {
+  position: fixed;
+  top: -30px;
+  pointer-events: none;
+  z-index: 10;
+}
+.heart {
+  font-size: 24px;
+  opacity: 0.8;
+  animation: fall 6s linear infinite;
+}
+/* Nút bấm với hiệu ứng pulse & tim trên nút */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(236, 72, 153, 0.6);
+  }
+  70% {
+    box-shadow: 0 0 0 15px rgba(236, 72, 153, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(236, 72, 153, 0);
+  }
+}
+.pulse {
+  animation: pulse 2s infinite;
+}
+
+.main-content {
+  flex: 1;
+  margin: 10px;  /* Giữ lại margin cho main content nếu cần */
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 3fr));
+  gap: 15px;
+}
+
+/* Thêm vào cuối file CSS hoặc ngay sau đoạn khai báo nav a */
+nav a {
+  /* Giữ lại các thuộc tính cũ */
+  text-transform: uppercase;
+  margin: 8px 5px;
+  padding: 12px 8px;
+  border-radius: 5px;
+  display: block;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #fff;
+  background: linear-gradient(90deg, #f48fb1, #00d4ff, #f48fb1);
+  background-size: 200% 200%;
+  animation: gradientShift 3s ease infinite, dropIn 0.5s ease forwards;
+
+  transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+
+  opacity: 0;
+  transform: translateY(-40px);
+}
+
+/* Keyframes cho hiệu ứng rơi */
+@keyframes dropIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+/* Tạo độ trễ để từng nút rơi lần lượt 
+   (số giây bạn có thể tuỳ chỉnh) */
+nav a:nth-child(1) {
+  animation-delay: 0.1s;
+}
+nav a:nth-child(2) {
+  animation-delay: 0.2s;
+}
+nav a:nth-child(3) {
+  animation-delay: 0.3s;
+}
+nav a:nth-child(4) {
+  animation-delay: 0.4s;
+}
+nav a:nth-child(5) {
+  animation-delay: 0.5s;
+}
+/* ... và tiếp tục nếu có nhiều nút hơn */
+
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+nav a:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+
+/* Review Cards */
+.review-card {
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+ color: #dc3545;
+ 
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform var(--transition-speed), box-shadow var(--transition-speed), border 0.3s;
+}
+
+.review-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+}
+
+.review-card img {
+  width: 100%;
+  height: 330px;
+  object-fit: cover;
+}
+
+.review-card span {
+    display: block;
+    padding: 5px;
+    text-align: center;
+    /* font-size: 1.2rem; */
+    font-weight: 700;
+    /* letter-spacing: 2px; */
+
+    /* text-transform: uppercase; */
+    /* letter-spacing: 2px; */
+    /* background: linear-gradient(45deg, #e30000, var(--red), #00ff0a, #008eff, #e400ff); */
+    /* background-size: 300%; */
+    /* -webkit-background-clip: text; */
+    /* -webkit-text-fill-color: transparent; */
+    /* text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3); */
+    animation: gradientAnimation 5s ease infinite, slideIn 1s ease-out, pulse 2s ease-in-out infinite;
+}
+
+
+
+.review-detail .content {
+  font-size: 0.95rem;
+  color: var(--text-color);
+}
+
+/* Options */
+.options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.option {
+  padding: 15px;
+  background: rgba(0, 0, 0, 0.7);
+  text-align: center;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  font-weight: 600;
+  transition: background var(--transition-speed), transform var(--transition-speed);
+}
+
+.option:hover {
+  background: var(--secondary-color);
+  color: #fff;
+  transform: scale(1.03);
+}
+
+.option.selected {
+  background: var(--secondary-color);
+  color: #fff;
+  box-shadow: 0 0 15px var(--accent-glow);
+  position: relative;
+  animation: pulseGlow 1.5s infinite;
+}
+
+@keyframes pulseGlow {
+  0% { box-shadow: 0 0 15px var(--accent-glow); }
+  50% { box-shadow: 0 0 25px var(--accent-glow); }
+  100% { box-shadow: 0 0 15px var(--accent-glow); }
+}
+
+.option.selected::after {
+  content: "\2713";
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  font-size: 1.2rem;
+  color: #fff;
+}
+
+/* Buttons */
+.submit-button,
+.close-button {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background var(--transition-speed), transform 0.2s;
+  margin-right: 10px;
+}
+
+.submit-button {
+  background: linear-gradient(45deg, var(--secondary-color), var(--primary-color));
+  color: #fff;
+}
+
+.submit-button:hover {
+  background: linear-gradient(45deg, #3a7bd5, #2a6496);
+  transform: scale(1.03);
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+
+.close-button {
+  background: var(--primary-color);
+  color: #fff;
+}
+
+.close-button:hover {
+  background: #555;
+  transform: scale(1.03);
+}
+
+/* Bet Amount */
+.bet-amount {
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.bet-amount label {
+  margin-right: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.bet-amount input {
+  padding: 7px;
+  font-size: 1rem;
+  width: 130px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+}
+
+/* Timer */
+.timer,
+.live-period-label {
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.timer {
+  font-size: 1.5rem;
+  color: var(--secondary-color);
+  font-weight: bold;
+}
+.badge-success {
+              border-radius: 3px;
+        color: #000000;
+        background-color: #28a745;
+    }
+    .badge-danger {
+          border-radius: 3px;
+        color: #000000;
+        background-color: #dc3545;
+    }
+    .badge-warning {
+   
+         border-radius: 3px;
+          color: #000000;
+    background-color: #ffc107;
+}
+.badge {
+    display: inline-block;
+    min-width: 50px;
+    text-align: center;
+ 
+    border-radius: 3px;
+    color: #000000;
+    font-weight: bold;
+}
+
+  main,
+  .main-content {
+    flex: 0 0 55%;
+    margin: 10px 5px;
+  }
+

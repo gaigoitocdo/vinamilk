@@ -1,0 +1,597 @@
+<?php
+/**
+ * Enhanced Real-time Lottery Processor - FIXED VERSION
+ * File: includes/RealTimeLotteryProcessor.php
+ */
+
+class RealTimeLotteryProcessor {
+    private static $cache = [];
+    private static $processing = false;
+    private static $lastProcessTime = 0;
+    
+    /**
+     * Process lottery in real-time
+     */
+    public static function processLottery($lottery_id, $force = false) {
+        // Prevent concurrent processing
+        if (self::$processing && !$force) {
+            return ['success' => false, 'message' => 'Already processing'];
+        }
+        
+        // Rate limiting - only process every 3 seconds
+        if (!$force && (time() - self::$lastProcessTime) < 3) {
+            return ['success' => false, 'message' => 'Rate limited'];
+        }
+        
+        self::$processing = true;
+        self::$lastProcessTime = time();
+        
+        try {
+            $db = Database::getInstance();
+            
+            // Get lottery info
+            $lottery = LotteryModel::Get($lottery_id);
+            if (!$lottery) {
+                throw new Exception("Lottery not found");
+            }
+            
+            $current_session = LotterySessionModel::GetCurrentSessionID($lottery['rule']);
+            $remaining_seconds = LotterySessionModel::GetRemainSeconds($lottery['rule']);
+            
+            // Check if session needs to be processed
+            $session_data = LotterySessionModel::Get($lottery_id, $current_session);
+            
+            if (!$session_data) {
+                // Create new session
+                $session_data = [
+                    'lid' => $lottery_id,
+                    'sid' => $current_session,
+                    'status' => 1, // Active
+                    'type' => 1,   // Regular
+                    'result' => '',
+                    'create_time' => time()
+                ];
+                
+                LotterySessionModel::Insert($session_data);
+                error_log("[LOTTERY] New session created: {$current_session}");
+            }
+            
+            // Process completed sessions (when remaining time is very low)
+            if ($remaining_seconds <= 5) {
+                self::processCompletedSessions($lottery_id, $lottery['rule']);
+            }
+            
+            // Update betting statistics
+            $bet_stats = self::calculateBettingStats($lottery_id, $current_session);
+            
+            // Update cache
+            self::updateCache($lottery_id, [
+                'current_session' => $current_session,
+                'remaining_seconds' => $remaining_seconds,
+                'bet_stats' => $bet_stats,
+                'last_update' => time()
+            ]);
+            
+            return [
+                'success' => true,
+                'data' => [
+                    'current_session' => $current_session,
+                    'remaining_seconds' => $remaining_seconds,
+                    'bet_stats' => $bet_stats,
+                    'timestamp' => time()
+                ]
+            ];
+            
+        } catch (Exception $e) {
+            error_log("[LOTTERY ERROR] " . $e->getMessage());
+            
+            return [
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
+        } finally {
+            self::$processing = false;
+        }
+    }
+    
+    /**
+     * Process completed sessions and generate results
+     */
+    private static function processCompletedSessions($lottery_id, $rule) {
+        $db = Database::getInstance();
+        
+        // Get sessions that should be completed but don't have results
+        $prev_session = LotterySessionModel::GetPrevSessionID($rule);
+        $session_data = LotterySessionModel::Get($lottery_id, $prev_session);
+        
+        if ($session_data && empty($session_data['result'])) {
+            // Generate result for completed session
+            $result = self::generateResult($lottery_id, $prev_session);
+            
+            // Update session with result
+            LotterySessionModel::Update([
+                'result' => $result,
+                'status' => 0, // Completed
+                'update_time' => time()
+            ], $session_data['id']);
+            
+            // Process all bets for this session
+            self::processBets($lottery_id, $prev_session, $result);
+            
+            error_log("[LOTTERY] Session {$prev_session} completed with result: {$result}");
+        }
+    }
+    
+    /**
+     * Generate lottery result based on betting patterns
+     */
+    private static function generateResult($lottery_id, $session_id) {
+        // Check if there's a manual edit
+        $edit_result = self::getEditResult($lottery_id, $session_id);
+        if ($edit_result) {
+            return $edit_result;
+        }
+        
+        // Get betting statistics for this session
+        $bet_stats = LotteryHistoryModel::GetSessionStats($lottery_id, $session_id);
+        
+        // Generate result based on betting patterns (house edge protection)
+        $options = ['A', 'B', 'C', 'D'];
+        $weights = [];
+        
+        foreach ($options as $option) {
+            $bet_count = 0;
+            $bet_money = 0;
+            
+            if ($bet_stats) {
+                foreach ($bet_stats as $stat) {
+                    if ($stat['type'] == $option) {
+                        $bet_count = $stat['count'];
+                        $bet_money = $stat['total_money'];
+                        break;
+                    }
+                }
+            }
+            
+            // Lower weight for heavily bet options (house edge)
+            $weights[$option] = max(1, 100 - $bet_money);
+        }
+        
+        // Randomly select based on weights
+        $result = self::weightedRandomSelect($weights);
+        
+        // Always return 2 results as per original logic
+        $results = [$result];
+        
+        // Add second result (different from first)
+        $remaining_options = array_diff($options, [$result]);
+        $results[] = $remaining_options[array_rand($remaining_options)];
+        
+        return implode(',', $results);
+    }
+    
+    /**
+     * Get manual edit result if exists
+     */
+    private static function getEditResult($lottery_id, $session_id) {
+        $db = Database::getInstance();
+        $lottery = LotteryModel::Get($lottery_id);
+        
+        if (!$lottery) return null;
+        
+        $edit = $db->pdo_query_one(
+            "SELECT * FROM lottery_edit WHERE `key` = ? AND `session` = ?",
+            $lottery['key'], $session_id
+        );
+        
+        return $edit ? $edit['result'] : null;
+    }
+    
+    /**
+     * Weighted random selection
+     */
+    private static function weightedRandomSelect($weights) {
+        $total = array_sum($weights);
+        if ($total == 0) {
+            return array_keys($weights)[0];
+        }
+        
+        $random = mt_rand(1, $total);
+        
+        $current = 0;
+        foreach ($weights as $option => $weight) {
+            $current += $weight;
+            if ($random <= $current) {
+                return $option;
+            }
+        }
+        
+        return array_keys($weights)[0]; // Fallback
+    }
+    
+    /**
+     * Process all bets for a completed session
+     */
+    private static function processBets($lottery_id, $session_id, $result) {
+        $db = Database::getInstance();
+        
+        // Get all unprocessed bets for this session
+        $bets = LotteryHistoryModel::GetAllUnbet($lottery_id, $session_id);
+        $winning_options = explode(',', $result);
+        
+        foreach ($bets as $bet) {
+            $is_win = in_array($bet['type'], $winning_options);
+            $win_amount = 0;
+            
+            if ($is_win) {
+                // Calculate winnings
+                $win_amount = $bet['money'] * $bet['proportion'];
+                
+                // Update user balance
+                $user = UserModel::GetOne($bet['uid']);
+                if ($user) {
+                    UserModel::Update($bet['uid'], [
+                        'money' => $user['money'] + $win_amount
+                    ]);
+                }
+            }
+            
+            // Update bet record
+            LotteryHistoryModel::Update([
+                'status' => 1,        // Processed
+                'is_win' => $is_win ? 1 : 2,  // 1 = win, 2 = loss
+                'win_amount' => $win_amount,
+                'update_time' => time()
+            ], $bet['id']);
+        }
+        
+        error_log("[LOTTERY] Processed " . count($bets) . " bets for session {$session_id}");
+    }
+    
+    /**
+     * Calculate real-time betting statistics
+     */
+    private static function calculateBettingStats($lottery_id, $session_id) {
+        $bet_stats = LotteryHistoryModel::GetSessionStats($lottery_id, $session_id);
+        
+        $total_bets = 0;
+        $total_money = 0;
+        $option_stats = [
+            'A' => ['count' => 0, 'money' => 0],
+            'B' => ['count' => 0, 'money' => 0],
+            'C' => ['count' => 0, 'money' => 0],
+            'D' => ['count' => 0, 'money' => 0]
+        ];
+        
+        if ($bet_stats) {
+            foreach ($bet_stats as $stat) {
+                $total_bets += $stat['count'];
+                $total_money += $stat['total_money'];
+                
+                if (isset($option_stats[$stat['type']])) {
+                    $option_stats[$stat['type']] = [
+                        'count' => $stat['count'],
+                        'money' => $stat['total_money']
+                    ];
+                }
+            }
+        }
+        
+        // Calculate percentages
+        foreach ($option_stats as $option => &$stats) {
+            $stats['percentage'] = $total_bets > 0 ? 
+                round(($stats['count'] / $total_bets) * 100, 1) : 0;
+        }
+        
+        return [
+            'total_bets' => $total_bets,
+            'total_money' => $total_money,
+            'options' => $option_stats
+        ];
+    }
+    
+    /**
+     * Update cache
+     */
+    private static function updateCache($lottery_id, $data) {
+        self::$cache[$lottery_id] = $data;
+    }
+    
+    /**
+     * Get cache
+     */
+    public static function getLotteryCache($lottery_id) {
+        return self::$cache[$lottery_id] ?? null;
+    }
+    
+    /**
+     * Clear cache
+     */
+    public static function clearCache($lottery_id = null) {
+        if ($lottery_id) {
+            unset(self::$cache[$lottery_id]);
+        } else {
+            self::$cache = [];
+        }
+    }
+    
+    /**
+     * Get system status
+     */
+    public static function getStatus() {
+        return [
+            'processing' => self::$processing,
+            'last_process_time' => self::$lastProcessTime,
+            'cache_count' => count(self::$cache),
+            'memory_usage' => memory_get_usage(true),
+            'uptime' => time() - (self::$lastProcessTime ?: time())
+        ];
+    }
+    
+    /**
+     * Health check
+     */
+    public static function healthCheck() {
+        try {
+            $db = Database::getInstance();
+            $db->pdo_query_one("SELECT 1");
+            
+            return [
+                'status' => 'healthy',
+                'database' => 'connected',
+                'processing' => self::$processing ? 'active' : 'idle',
+                'cache_size' => count(self::$cache),
+                'timestamp' => time()
+            ];
+            
+        } catch (Exception $e) {
+            return [
+                'status' => 'unhealthy',
+                'error' => $e->getMessage(),
+                'timestamp' => time()
+            ];
+        }
+    }
+
+    /**
+     * Process lottery on demand (lighter version)
+     */
+    public static function processOnDemand($lottery_id) {
+        try {
+            if (!$lottery_id) {
+                return ['success' => false, 'message' => 'Invalid lottery ID'];
+            }
+
+            $lottery = LotteryModel::Get($lottery_id);
+            if (!$lottery) {
+                return ['success' => false, 'message' => 'Lottery not found'];
+            }
+
+            // Get session info
+            $current_session = LotterySessionModel::GetCurrentSessionID($lottery['rule']);
+            $remaining_seconds = LotterySessionModel::GetRemainSeconds($lottery['rule']);
+
+            // Ensure current session exists
+            $session_data = LotterySessionModel::Get($lottery_id, $current_session);
+            if (!$session_data) {
+                LotterySessionModel::Insert([
+                    'lid' => $lottery_id,
+                    'sid' => $current_session,
+                    'status' => 1,
+                    'type' => 1,
+                    'result' => '',
+                    'create_time' => time()
+                ]);
+            }
+
+            return [
+                'success' => true,
+                'data' => [
+                    'current_session' => $current_session,
+                    'remaining_seconds' => $remaining_seconds,
+                    'processed' => true
+                ]
+            ];
+
+        } catch (Exception $e) {
+            error_log("[PROCESSOR ERROR] " . $e->getMessage());
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Get session information
+     */
+    public static function getSessionInfo($lottery_id) {
+        try {
+            $lottery = LotteryModel::Get($lottery_id);
+            if (!$lottery) {
+                return [
+                    'current_session' => '',
+                    'prev_session' => '',
+                    'remaining_seconds' => 0
+                ];
+            }
+
+            $current_session = LotterySessionModel::GetCurrentSessionID($lottery['rule']);
+            $prev_session = LotterySessionModel::GetPrevSessionID($lottery['rule']);
+            $remaining_seconds = LotterySessionModel::GetRemainSeconds($lottery['rule']);
+
+            return [
+                'current_session' => $current_session,
+                'prev_session' => $prev_session,
+                'remaining_seconds' => $remaining_seconds
+            ];
+
+        } catch (Exception $e) {
+            error_log("[SESSION INFO ERROR] " . $e->getMessage());
+            return [
+                'current_session' => '',
+                'prev_session' => '',
+                'remaining_seconds' => 0
+            ];
+        }
+    }
+
+    /**
+     * Get betting statistics for a session
+     */
+    public static function getBettingStats($lottery_id, $session_id) {
+        try {
+            $db = Database::getInstance();
+            
+            // First try to get from lottery_units table if it exists
+            try {
+                $units = $db->pdo_query_one("
+                    SELECT option_a, option_b, option_c, option_d 
+                    FROM lottery_units 
+                    WHERE session_id = ?
+                ", $session_id);
+
+                if ($units) {
+                    return [
+                        (int)$units['option_a'],
+                        (int)$units['option_b'],
+                        (int)$units['option_c'],
+                        (int)$units['option_d']
+                    ];
+                }
+            } catch (Exception $e) {
+                // Table doesn't exist, continue with fallback
+            }
+
+            // Fallback: calculate from lottery_history
+            $stats = $db->pdo_query("
+                SELECT type, COUNT(*) as count 
+                FROM lottery_history 
+                WHERE lid = ? AND sid = ? AND status = 0
+                GROUP BY type
+            ", $lottery_id, $session_id);
+
+            $result = [0, 0, 0, 0]; // A, B, C, D
+            $mapping = ['A' => 0, 'B' => 1, 'C' => 2, 'D' => 3];
+
+            if ($stats) {
+                foreach ($stats as $stat) {
+                    if (isset($mapping[$stat['type']])) {
+                        $result[$mapping[$stat['type']]] = (int)$stat['count'];
+                    }
+                }
+            }
+
+            return $result;
+
+        } catch (Exception $e) {
+            error_log("[BETTING STATS ERROR] " . $e->getMessage());
+            return [0, 0, 0, 0];
+        }
+    }
+
+    /**
+     * Force process a specific session
+     */
+    public static function forceProcessSession($lottery_id, $session_id) {
+        try {
+            $db = Database::getInstance();
+            
+            // Get session
+            $session = LotterySessionModel::Get($lottery_id, $session_id);
+            if (!$session) {
+                return false;
+            }
+
+            // If already processed, return true
+            if (!empty($session['result'])) {
+                return true;
+            }
+
+            // Generate result
+            $lottery = LotteryModel::Get($lottery_id);
+            $result = self::generateSessionResult($lottery, $session_id);
+
+            // Update session
+            LotterySessionModel::Update([
+                'result' => $result,
+                'status' => 0,
+                'update_time' => time()
+            ], $session['id']);
+
+            // Process bets
+            self::processBetsForSession($lottery_id, $session_id, $result);
+
+            return true;
+
+        } catch (Exception $e) {
+            error_log("[FORCE PROCESS ERROR] " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Generate result for a session
+     */
+    private static function generateSessionResult($lottery, $session_id) {
+        // Check for manual edit first
+        $db = Database::getInstance();
+        $edit = $db->pdo_query_one(
+            "SELECT * FROM lottery_edit WHERE `key` = ? AND `session` = ?",
+            $lottery['key'], $session_id
+        );
+
+        if ($edit && !empty($edit['result'])) {
+            return $edit['result'];
+        }
+
+        // Generate random result
+        $options = ['A', 'B', 'C', 'D'];
+        $result1 = $options[array_rand($options)];
+        
+        // Remove first option and select second
+        $remaining = array_diff($options, [$result1]);
+        $result2 = $remaining[array_rand($remaining)];
+
+        return $result1 . ',' . $result2;
+    }
+
+    /**
+     * Process bets for a session
+     */
+    private static function processBetsForSession($lottery_id, $session_id, $result) {
+        try {
+            $db = Database::getInstance();
+            
+            // Get all unprocessed bets
+            $bets = LotteryHistoryModel::GetAllUnbet($lottery_id, $session_id);
+            $winning_options = explode(',', $result);
+
+            foreach ($bets as $bet) {
+                $is_win = in_array($bet['type'], $winning_options);
+                $win_amount = 0;
+
+                if ($is_win) {
+                    $win_amount = $bet['money'] * $bet['proportion'];
+                    
+                    // Update user balance
+                    $user = UserModel::GetOne($bet['uid']);
+                    if ($user) {
+                        UserModel::Update($bet['uid'], [
+                            'money' => $user['money'] + $win_amount
+                        ]);
+                    }
+                }
+
+                // Update bet record
+                LotteryHistoryModel::Update([
+                    'status' => 1,
+                    'is_win' => $is_win ? 1 : 2,
+                    'win_amount' => $win_amount,
+                    'update_time' => time()
+                ], $bet['id']);
+            }
+
+        } catch (Exception $e) {
+            error_log("[PROCESS BETS ERROR] " . $e->getMessage());
+        }
+    }
+}
+?>
