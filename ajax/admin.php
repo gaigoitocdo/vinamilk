@@ -561,44 +561,72 @@ if ($type == "update_topup_meta") {
     $key = field("key", 15, true);
 
     LotteryEditModel::GetAll($key);
+// ✅ ENHANCED: Enhanced admin.php section for lottery editing
+
 } else if ($type == "update_lottery_edit") {
     $key = field("key", 15, true);
     $session = field("session", 15, true);
     $result = field("result", 15, true);
 
-    // ✅ VALIDATE: Đảm bảo result là mã 5 số hoặc nhiều mã phân cách bởi dấu phẩy
+    // ✅ ENHANCED: Validate 5-digit codes format
     if (!preg_match('/^\d{5}(,\d{5})*$/', $result)) {
         return json_response(400, [
             "success" => false, 
-            "message" => "Kết quả phải là mã 5 số (VD: 12345 hoặc 12345,67890)"
+            "message" => "Kết quả phải là mã 5 số (VD: 12345) hoặc nhiều mã phân cách bởi dấu phẩy (VD: 12345,67890)"
         ]);
     }
 
-    $cur = LotteryEditModel::Get($key, $session);
-
-    $db = Database::getInstance();
-
-    if ($cur) {
-        $data = $db->update('lottery_edit', ["result" => $result, 'update_time' => time(), 'editor' => $_SESSION["id"]], $cur["id"]);
-    } else {
-        $data = $db->insert('lottery_edit', [
-            "key" => $key,
-            "session" => $session,
-            "result" => $result,
-            'editor' => $_SESSION["id"],
-            'create_time' => time(),
-            'update_time' => time()
+    // Additional validation: ensure unique codes
+    $codes = explode(',', $result);
+    if (count($codes) !== count(array_unique($codes))) {
+        return json_response(400, [
+            "success" => false, 
+            "message" => "Các mã số phải khác nhau"
         ]);
     }
-    json_response(200, ["success" => true, "data" => $data]);
+
+    // Validate each code is exactly 5 digits
+    foreach ($codes as $code) {
+        if (!preg_match('/^\d{5}$/', trim($code))) {
+            return json_response(400, [
+                "success" => false, 
+                "message" => "Mỗi mã phải gồm đúng 5 chữ số"
+            ]);
+        }
+    }
+
+    try {
+        $data = LotteryEditModel::UpdateResult($key, $session, $result, $_SESSION["id"]);
+        
+        // ✅ ENHANCED: Also update the actual session if it exists
+        $lottery = LotteryModel::GetByKey($key);
+        if ($lottery) {
+            $session_info = LotterySessionModel::Get($lottery['id'], $session);
+            if ($session_info) {
+                // Update session with the admin result
+                LotterySessionModel::Update([
+                    'result' => $result,
+                    'admin_edited' => 1,
+                    'admin_edit_time' => time()
+                ], [['sid', $session], ['lid', $lottery['id']]]);
+                
+                error_log("Admin updated session {$session} result to: {$result}");
+            }
+        }
+        
+        json_response(200, ["success" => true, "data" => $data]);
+    } catch (Exception $e) {
+        json_response(400, ["success" => false, "message" => $e->getMessage()]);
+    }
+
 } else if ($type == "get_result") {
-    // ✅ NEW API: Admin panel lấy kết quả cho session cụ thể
+    // ✅ ENHANCED: Get result for session with 5-digit codes
     $session = field("session", null, true);
     $brand = field("brand", "TH", false);
     
     $db = Database::getInstance();
     
-    // Tìm lottery theo brand
+    // Find lottery by brand
     $lottery = null;
     if ($brand === "TH") {
         $lottery = $db->pdo_query_one("SELECT * FROM lottery WHERE name LIKE '%TH%' OR `key` LIKE '%th%' LIMIT 1");
@@ -610,7 +638,42 @@ if ($type == "update_topup_meta") {
         return json_response(404, ["success" => false, "message" => "Brand not found"]);
     }
     
-    // Tìm kết quả trong lottery_session
+    // Check admin edit first
+    $adminEdit = LotteryEditModel::Get($lottery['key'], $session);
+    if ($adminEdit && !empty($adminEdit['result'])) {
+        $result = $adminEdit['result'];
+        
+        // Parse result codes
+        $codes = array_map('trim', explode(',', $result));
+        $winningCode = $codes[0]; // First code is primary winner
+        
+        // Get session codes to determine winner letter
+        $sessionInfo = LotterySessionModel::Get($lottery['id'], $session);
+        $letter = 'a'; // default
+        
+        if ($sessionInfo && !empty($sessionInfo['session_codes'])) {
+            $sessionCodes = json_decode($sessionInfo['session_codes'], true);
+            foreach ($sessionCodes as $l => $code) {
+                if ($code === $winningCode) {
+                    $letter = $l;
+                    break;
+                }
+            }
+        }
+        
+        return json_response(200, [
+            "success" => true,
+            "data" => [
+                "code" => $winningCode,
+                "letter" => $letter,
+                "all_codes" => $codes,
+                "source" => "admin_edit",
+                "editor" => $adminEdit['editor'] ?? null
+            ]
+        ]);
+    }
+    
+    // Check session result
     $sessionResult = $db->pdo_query_one(
         "SELECT result, session_codes FROM lottery_session WHERE lid = ? AND sid = ? AND result != ''",
         $lottery['id'], $session
@@ -620,7 +683,7 @@ if ($type == "update_topup_meta") {
         $codes = explode(',', $sessionResult['result']);
         $sessionCodes = json_decode($sessionResult['session_codes'] ?? '{}', true);
         
-        // Map ngược từ codes về letters
+        // Map codes back to letters
         $letter = 'a'; // default
         if ($sessionCodes) {
             foreach ($sessionCodes as $l => $code) {
@@ -634,28 +697,88 @@ if ($type == "update_topup_meta") {
         return json_response(200, [
             "success" => true,
             "data" => [
-                "code" => $codes[0], // Code đầu tiên
+                "code" => $codes[0],
                 "letter" => $letter,
                 "all_codes" => $codes,
+                "source" => "session",
                 "session_codes" => $sessionCodes
             ]
         ]);
     }
     
     return json_response(404, ["success" => false, "message" => "No result found"]);
+
 } else if ($type == "delete_lottery_edit") {
     $key = field("key", 15, true);
     $session = field("session", 15, true);
 
     $cur = LotteryEditModel::Get($key, $session);
 
-    $db = Database::getInstance();
-
     if (!$cur) {
         return json_response(400, ["success" => false, "message" => "Bạn chưa lưu kết quả này!"]);
-    } else {
-        $data = $db->pdo_execute("DELETE FROM `lottery_edit` WHERE `key` = '$key' AND `session` = '$session'");
+    }
+    
+    try {
+        $data = LotteryEditModel::DeleteResult($key, $session);
+        
+        // ✅ ENHANCED: Also clear admin edit flag from session
+        $lottery = LotteryModel::GetByKey($key);
+        if ($lottery) {
+            $session_info = LotterySessionModel::Get($lottery['id'], $session);
+            if ($session_info) {
+                LotterySessionModel::Update([
+                    'admin_edited' => 0
+                ], [['sid', $session], ['lid', $lottery['id']]]);
+                
+                error_log("Admin deleted edit for session {$session}");
+            }
+        }
+        
         return json_response(200, ["success" => true, "data" => $data]);
+    } catch (Exception $e) {
+        return json_response(400, ["success" => false, "message" => $e->getMessage()]);
+    }
+
+} else if ($type == "get_lottery_winning_stats") {
+    // ✅ NEW: Get winning statistics for admin dashboard
+    $key = field("key", null, true);
+    $limit = field("limit", 10);
+    
+    try {
+        $stats = LotteryEditModel::GetWinningStats($key, $limit);
+        return json_response(200, ["success" => true, "data" => $stats]);
+    } catch (Exception $e) {
+        return json_response(400, ["success" => false, "message" => $e->getMessage()]);
+    }
+
+} else if ($type == "generate_lottery_codes") {
+    // ✅ NEW: Generate new 5-digit codes for a session
+    $key = field("key", null, true);
+    $session = field("session", null, true);
+    
+    try {
+        $lottery = LotteryModel::GetByKey($key);
+        if (!$lottery) {
+            return json_response(404, ["success" => false, "message" => "Lottery not found"]);
+        }
+        
+        // Generate new codes
+        $codes = LotterySessionModel::GenerateSessionCodes($session);
+        
+        // Update session with new codes
+        $db = Database::getInstance();
+        $db->pdo_execute(
+            "UPDATE lottery_session SET session_codes = ? WHERE lid = ? AND sid = ?",
+            json_encode($codes), $lottery['id'], $session
+        );
+        
+        return json_response(200, [
+            "success" => true, 
+            "data" => $codes,
+            "message" => "Generated new session codes"
+        ]);
+    } catch (Exception $e) {
+        return json_response(400, ["success" => false, "message" => $e->getMessage()]);
     }
 } else if ($type == "edit_vip_level") {
     
