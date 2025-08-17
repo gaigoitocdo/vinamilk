@@ -43,13 +43,13 @@ class LotteryEditModel
             }
 
             if (!$lottery_edit) {
-                // ✅ NEW: Generate random 5-digit code instead of A,B,C,D
+                // ✅ FIXED: Tạo mã 5 số thay vì A,B,C,D
                 $random_code = str_pad(rand(10000, 99999), 5, '0', STR_PAD_LEFT);
 
                 $arr[] = [
                     'name' => $v['name'],
                     'key' => $v['key'],
-                    'result' => $random_code, // 5-digit code instead of "A,D"
+                    'result' => $random_code, // ✅ Mã 5 số trực tiếp
                     'session' => $next_expect,
                     'create_time' => $now_info['create_time'] + $second * $i,
                 ];
@@ -58,7 +58,7 @@ class LotteryEditModel
                 $arr[] = [
                     'name' => $v['name'],
                     'key' => $v['key'],
-                    'result' => $lottery_edit["result"], // Should be 5-digit code
+                    'result' => $lottery_edit["result"], // ✅ Từ DB - đã là mã 5 số
                     'editor' => $u ? $u["username"] : "unknown",
                     'session' => $next_expect,
                     'create_time' => $now_info['create_time'] + $second * $i,
