@@ -550,14 +550,6 @@ if ($type == "update_topup_meta") {
 } else if ($type == "update_config") {
     $data = field("data", 15, true);
 
-    // $info = WithdrawModel::GetOneHistory($id);
-
-    // if (!$info) return json_response(500, ["success" => false, "message" => "History $id not found"]);
-
-    // $data = WithdrawModel::UpdateHistory($id, ["status" => 1]);
-
-    // UserModel::UpdateMoney($info["uid"], $info["money"] * -1, "Rút tiền thành công ");
-
     $db = Database::getInstance();
 
     foreach ($data as $key => $val) {
@@ -573,6 +565,14 @@ if ($type == "update_topup_meta") {
     $key = field("key", 15, true);
     $session = field("session", 15, true);
     $result = field("result", 15, true);
+
+    // ✅ VALIDATE: Đảm bảo result là mã 5 số hoặc nhiều mã phân cách bởi dấu phẩy
+    if (!preg_match('/^\d{5}(,\d{5})*$/', $result)) {
+        return json_response(400, [
+            "success" => false, 
+            "message" => "Kết quả phải là mã 5 số (VD: 12345 hoặc 12345,67890)"
+        ]);
+    }
 
     $cur = LotteryEditModel::Get($key, $session);
 
@@ -591,6 +591,58 @@ if ($type == "update_topup_meta") {
         ]);
     }
     json_response(200, ["success" => true, "data" => $data]);
+} else if ($type == "get_result") {
+    // ✅ NEW API: Admin panel lấy kết quả cho session cụ thể
+    $session = field("session", null, true);
+    $brand = field("brand", "TH", false);
+    
+    $db = Database::getInstance();
+    
+    // Tìm lottery theo brand
+    $lottery = null;
+    if ($brand === "TH") {
+        $lottery = $db->pdo_query_one("SELECT * FROM lottery WHERE name LIKE '%TH%' OR `key` LIKE '%th%' LIMIT 1");
+    } else {
+        $lottery = $db->pdo_query_one("SELECT * FROM lottery WHERE name LIKE '%VINAMILK%' OR `key` LIKE '%vinamilk%' LIMIT 1");
+    }
+    
+    if (!$lottery) {
+        return json_response(404, ["success" => false, "message" => "Brand not found"]);
+    }
+    
+    // Tìm kết quả trong lottery_session
+    $sessionResult = $db->pdo_query_one(
+        "SELECT result, session_codes FROM lottery_session WHERE lid = ? AND sid = ? AND result != ''",
+        $lottery['id'], $session
+    );
+    
+    if ($sessionResult && !empty($sessionResult['result'])) {
+        $codes = explode(',', $sessionResult['result']);
+        $sessionCodes = json_decode($sessionResult['session_codes'] ?? '{}', true);
+        
+        // Map ngược từ codes về letters
+        $letter = 'a'; // default
+        if ($sessionCodes) {
+            foreach ($sessionCodes as $l => $code) {
+                if (in_array($code, $codes)) {
+                    $letter = $l;
+                    break;
+                }
+            }
+        }
+        
+        return json_response(200, [
+            "success" => true,
+            "data" => [
+                "code" => $codes[0], // Code đầu tiên
+                "letter" => $letter,
+                "all_codes" => $codes,
+                "session_codes" => $sessionCodes
+            ]
+        ]);
+    }
+    
+    return json_response(404, ["success" => false, "message" => "No result found"]);
 } else if ($type == "delete_lottery_edit") {
     $key = field("key", 15, true);
     $session = field("session", 15, true);
@@ -633,7 +685,7 @@ if ($type == "update_topup_meta") {
 
     return json_response(200, ["success" => true, "data" => $r]);
 
-}else if ($type == "delete_vip_level") {
+} else if ($type == "delete_vip_level") {
     
     $id = field("id", 0, true, true);
 
