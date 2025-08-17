@@ -141,4 +141,11 @@ class Database
 
         return $this;
     }
+
+    // ✅ FIXED: Added missing method for insert with params
+    public function pdo_insert($table_name, $data)
+    {
+        return $this->insert($table_name, $data);
+    }
 }
+?>
